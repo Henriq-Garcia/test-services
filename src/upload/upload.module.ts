@@ -8,6 +8,7 @@ import { DatabaseModule } from 'src/database/database.module';
     BullModule.registerQueue({ name: 'file-upload' }),
     DatabaseModule
   ],
+  exports: [BullModule.registerQueue({ name: 'file-upload' })],
   providers: [UploadProcessor],
 })
 export class UploadModule {}

@@ -3,6 +3,7 @@ import { DatabaseModule } from './database/database.module';
 import { BullModule } from '@nestjs/bull';
 import { UploadProcessor } from './upload/upload.processor';
 import { UploadModule } from './upload/upload.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UploadModule } from './upload/upload.module';
         port: Number(process.env.REDIS_PORT),
       },
     }),
+    FileModule,
   ],
 })
 export class AppModule {}
