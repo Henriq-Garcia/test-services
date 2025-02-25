@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bull';
 import { BucketService } from './bucket.service';
+import { BucketProcessor } from './bucket.processor';
 import { DatabaseModule } from 'src/database/database.module';
-import { Bucket } from './entity/bucket.emitter';
 
 @Module({
-  imports: [DatabaseModule],
-  exports: [BucketService],
-  providers: [BucketService, Bucket]
+  imports: [
+    BullModule.registerQueue({
+      name: 'file-upload',
+    }),
+    DatabaseModule
+  ],
+  providers: [BucketService, BucketProcessor],
+  exports: [BucketService]
 })
 export class BucketModule {}
