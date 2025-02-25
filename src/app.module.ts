@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
-import { BucketModule } from './bucket/bucket.module';
 import { DatabaseModule } from './database/database.module';
-import { FileUploaderModule } from './file-uploader/file-uploader.module';
+import { BullModule } from '@nestjs/bull';
+import { UploadProcessor } from './upload/upload.processor';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
-  imports: [BucketModule, DatabaseModule, FileUploaderModule],
+  imports: [
+    DatabaseModule,
+    UploadModule,
+    BullModule.forRoot({
+      redis: { 
+        host: process.env.REDIS_HOST, 
+        username: process.env.REDIS_USER,
+        password: process.env.REDIS_PASS,
+        port: Number(process.env.REDIS_PORT),
+      },
+    }),
+  ],
 })
 export class AppModule {}
+
