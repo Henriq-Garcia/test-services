@@ -14,7 +14,7 @@ export class UploadProcessor {
         let file = await this.findFile(file_name);
         if (!file) {
             file = await this.prisma.file.create({
-                data: { file_name: file_name, status: 'PROCESSANDO' },
+                data: { file_name, status: 'PROCESSANDO' },
             });
         }
 
