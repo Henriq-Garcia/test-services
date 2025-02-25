@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { OpenUploadStreamDto } from './dto/open-upload-stream.dto';
 import { Bucket } from './entity/bucket.emitter';
+import { buffer } from 'stream/consumers';
 
 @Injectable()
 export class BucketService {
@@ -14,8 +15,8 @@ export class BucketService {
     }
 
     async openUploadStream(data: OpenUploadStreamDto) {
-        await this.prisma.file.create({ data: { file_name: data.file_name } })
-        this.bucket.emit("upload", data)
+        await this.prisma.file.create({ data: { file_name: data.file_name } });
+        await this.bucket.emitAsync("upload", data);
     }
 
     private async writeChunks(chunk: Buffer, chunk_id: number, file_name: string) {
@@ -28,7 +29,6 @@ export class BucketService {
                 file_id: file.id
              }
         })
-
     }
 
     private async findFile(file_name: string) {
@@ -38,5 +38,17 @@ export class BucketService {
         return file;
     }
 
-    async downloadFile() {}
+    async downloadFile(file_name: string) {
+        const file = await this.findFile(file_name);
+        if (!file) throw new NotFoundException('Arquivo não encontrado');
+
+        const chunks = await this.prisma.fileChunks.findMany({
+            where: { file_id: file.id },
+            orderBy: { chunk_index: 'asc' }
+        });
+        const buffers = chunks.map(chunk => chunk.data)
+        const completeBuffer = Buffer.concat(buffers)
+
+        return completeBuffer;
+    }
 }

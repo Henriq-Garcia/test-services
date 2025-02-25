@@ -10,6 +10,12 @@ interface BucketEvents {
 @Injectable()
 export class Bucket extends EventEmitter {
 
+    async emitAsync<K extends keyof BucketEvents>(event: K, ...args: Parameters<BucketEvents[K]>): Promise<void> {
+        const listeners = this.listeners(event) as BucketEvents[K][];
+        await Promise.all(listeners.map(listener => (listener as (...args: any[]) => any)(...args)));
+    }
+    
+
     emit<K extends keyof BucketEvents>(event: K, ...args: Parameters<BucketEvents[K]>): boolean {
         return super.emit(event, ...args);
     }
@@ -25,17 +31,11 @@ export class Bucket extends EventEmitter {
 
     async onUpload(data: OpenUploadStreamDto) {
         let index = 0;
-        let promises: Promise<void>[] = []
+        const promises: Promise<void>[] = [];
         for (const chunk of this.spliceBuffer(data.buffer, data.options?.chunk_size)) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    this.emit('write-chunk', chunk, index, data.file_name)
-                    index++;
-                    resolve()
-                })
-            )
+            promises.push(this.emitAsync('write-chunk', chunk, index++, data.file_name));
         }
-        await Promise.all(promises)
+        await Promise.all(promises);
     }
 
     private *spliceBuffer(buffer: Buffer, chunk_size: number = 2048) {
@@ -43,6 +43,4 @@ export class Bucket extends EventEmitter {
             yield buffer.subarray(i, i + chunk_size)
         }
     }
-
-
 }
